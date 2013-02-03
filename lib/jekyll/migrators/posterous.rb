@@ -5,7 +5,7 @@ require 'net/http'
 require 'uri'
 require "json"
 
-# ruby -r './lib/jekyll/migrators/posterous.rb' -e 'Jekyll::Posterous.process(email, pass, api_key, blog)'
+# ruby -r './lib/jekyll/migrators/posterous.rb' -e 'Jekyll::Posterous.process(email, pass, api_key, include_imgs, blog)'
 
 module Jekyll
   module Posterous
@@ -55,7 +55,7 @@ module Jekyll
       return urls
     end
 
-    def self.process(email, pass, api_token, blog = 'primary', base_path = '/')
+    def self.process(email, pass, api_token, include_imgs = false, blog = 'primary', base_path = '/')
       @email, @pass, @api_token = email, pass, api_token
       FileUtils.mkdir_p "_posts"
 
@@ -73,18 +73,20 @@ module Jekyll
           name = basename + '.html'
 
           # Images:
-          post_imgs = post["media"]["images"]
-          if post_imgs.any?
-            img_dir = "imgs/%s" % basename
-            img_urls = self.fetch_images(img_dir, post_imgs)
+          if include_imgs
+            post_imgs = post["media"]["images"]
+            if post_imgs.any?
+              img_dir = "imgs/%s" % basename
+              img_urls = self.fetch_images(img_dir, post_imgs)
 
-            img_urls.map! do |url|
-              '<li><img src="' + base_path + url + '"></li>'
+              img_urls.map! do |url|
+                '<li><img src="' + base_path + url + '"></li>'
+              end
+              imgcontent = "<ol>\n" + img_urls.join("\n") + "</ol>\n"
+
+              # filter out "posterous-content", replacing with imgs:
+              content = content.sub(/\<p\>\[\[posterous-content:[^\]]+\]\]\<\/\p\>/, imgcontent)
             end
-            imgcontent = "<ol>\n" + img_urls.join("\n") + "</ol>\n"
-
-            # filter out "posterous-content", replacing with imgs:
-            content = content.sub(/\<p\>\[\[posterous-content:[^\]]+\]\]\<\/\p\>/, imgcontent)
           end
 
           # Get the relevant fields as a hash, delete empty fields and convert

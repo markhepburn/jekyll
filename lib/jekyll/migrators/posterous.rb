@@ -87,7 +87,7 @@ module Jekyll
               imgcontent = "<ol>\n" + img_urls.join("\n") + "</ol>\n"
 
               # filter out "posterous-content", replacing with imgs:
-              content = content.sub(/\<p\>\[\[posterous-content:[^\]]+\]\]\<\/\p\>/, imgcontent)
+              content = content.sub(/\[\[posterous-content:[^\]]+\]\]/, imgcontent)
             end
           end
 

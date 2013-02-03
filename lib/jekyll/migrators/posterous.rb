@@ -55,11 +55,13 @@ module Jekyll
       return urls
     end
 
-    def self.process(email, pass, api_token, include_imgs = false, blog = 'primary', base_path = '/')
+    def self.process(email, pass, api_token, opts={})
       @email, @pass, @api_token = email, pass, api_token
+      defaults = { :include_imgs => false, :blog => 'primary', :base_path => '/' }
+      opts = defaults.merge(opts)
       FileUtils.mkdir_p "_posts"
 
-      posts = JSON.parse(self.fetch("/api/v2/users/me/sites/#{blog}/posts?api_token=#{@api_token}").body)
+      posts = JSON.parse(self.fetch("/api/v2/users/me/sites/#{opts[:blog]}/posts?api_token=#{@api_token}").body)
       page = 1
 
       while posts.any?
@@ -73,14 +75,14 @@ module Jekyll
           name = basename + '.html'
 
           # Images:
-          if include_imgs
+          if opts[:include_imgs]
             post_imgs = post["media"]["images"]
             if post_imgs.any?
               img_dir = "imgs/%s" % basename
               img_urls = self.fetch_images(img_dir, post_imgs)
 
               img_urls.map! do |url|
-                '<li><img src="' + base_path + url + '"></li>'
+                '<li><img src="' + opts[:base_path] + url + '"></li>'
               end
               imgcontent = "<ol>\n" + img_urls.join("\n") + "</ol>\n"
 
@@ -106,7 +108,7 @@ module Jekyll
         end
 
         page += 1
-        posts = JSON.parse(self.fetch("/api/v2/users/me/sites/#{blog}/posts?api_token=#{@api_token}&page=#{page}").body)
+        posts = JSON.parse(self.fetch("/api/v2/users/me/sites/#{opts[:blog]}/posts?api_token=#{@api_token}&page=#{page}").body)
       end
     end
   end
